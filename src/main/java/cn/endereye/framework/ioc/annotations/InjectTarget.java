@@ -4,7 +4,6 @@ import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.ANNOTATION_TYPE, ElementType.FIELD})
-@Inherited
 @Documented
 public @interface InjectTarget {
     enum Policy {

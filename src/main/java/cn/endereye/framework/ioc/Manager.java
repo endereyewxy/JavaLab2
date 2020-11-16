@@ -2,117 +2,92 @@ package cn.endereye.framework.ioc;
 
 import cn.endereye.framework.ioc.annotations.InjectSource;
 import cn.endereye.framework.ioc.annotations.InjectTarget;
-import cn.endereye.framework.ioc.scanner.ScannerOfDir;
-import cn.endereye.framework.ioc.scanner.ScannerOfJar;
+import cn.endereye.framework.ioc.scanner.DirScanner;
+import cn.endereye.framework.ioc.scanner.JarScanner;
 import cn.endereye.framework.utils.AnnotationUtils;
+import com.google.common.collect.HashBasedTable;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.*;
 
 public class Manager {
-    private final HashMap<Class<?>, LinkedList<Object>> sourcesByType = new HashMap<>();
+    private final HashMap<Class<?>, Object> sharedObjects = new HashMap<>();
 
-    private final HashMap<String, LinkedList<Object>> sourcesByName = new HashMap<>();
+    private final HashBasedTable<Class<?>, String, LinkedList<Class<?>>> sources = HashBasedTable.create();
 
-    private final ArrayList<Object> targets = new ArrayList<>();
+    private final ArrayList<Class<?>> targets = new ArrayList<>();
 
-    /**
-     * Register a class to be an injection source or an injection target container, or maybe both.
-     *
-     * @param type Class to be registered.
-     * @throws IOCFrameworkException Occurred when failed to create an instance of the class.
-     */
-    public void register(Class<?> type) throws IOCFrameworkException {
-        Object instance = null;
-        if (type.getAnnotation(Deprecated.class) == null) {
-            final InjectSource source = AnnotationUtils.findAnnotation(InjectSource.class, type);
-            if (source != null) {
-                instance = createInstance(type);
-                // Step 1. Add registry of its name.
-                //         This step is skipped if the source does not have a explicitly assigned name.
-                if (!"".equals(source.name())) {
-                    sourcesByName.putIfAbsent(source.name(), new LinkedList<>());
-                    sourcesByName.get(source.name()).addLast(instance);
-                }
-                // Step 2. Add registry for its own class.
-                //         It is guaranteed that the place is not occupied since we can only register every class once.
-                sourcesByType.putIfAbsent(type, new LinkedList<>());
-                sourcesByType.get(type).addLast(instance);
-                // Step 3. Add registries for implemented interfaces.
-                for (Class<?> inf : type.getInterfaces()) {
-                    sourcesByType.putIfAbsent(inf, new LinkedList<>());
-                    sourcesByType.get(inf).addLast(instance);
-                }
-            }
-        }
-        for (Field field : type.getDeclaredFields()) {
-            final InjectTarget target = field.getAnnotation(InjectTarget.class);
-            if (target != null) {
-                // Add this object into the target list.
-                // Actual injection is performed later, in order to ensure every injection source is registered.
-                if (instance == null)
-                    instance = createInstance(type);
-                targets.add(instance);
-                break;
-            }
+    @SuppressWarnings("unchecked")
+    public <T> T getOrCreateSharedObject(Class<T> type) throws IOCFrameworkException {
+        try {
+            if (!sharedObjects.containsKey(type))
+                sharedObjects.put(type, type.newInstance());
+            return (T) sharedObjects.get(type);
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new IOCFrameworkException("Cannot instantiate class " + type.getName());
         }
     }
 
-    /**
-     * Perform injection of all registered injection target containers.
-     *
-     * @throws IOCFrameworkException Occurred when the manager cannot find a proper source to inject, or failed to
-     *                               inject the source object into the corresponding field.
-     */
+    public void register(Class<?> type) {
+        if (type.getAnnotation(Deprecated.class) == null) {
+            final InjectSource annotation = AnnotationUtils.findAnnotation(InjectSource.class, type);
+            if (annotation != null) {
+                registerSource(type, annotation.name(), type);
+                for (Class<?> inf : type.getInterfaces())
+                    registerSource(inf, annotation.name(), type);
+            }
+            if (Arrays.stream(type.getDeclaredFields()).anyMatch(f -> f.getAnnotation(InjectTarget.class) != null))
+                targets.add(type);
+        }
+    }
+
     public void inject() throws IOCFrameworkException {
-        for (Object instance : targets) {
-            for (Field field : instance.getClass().getDeclaredFields()) {
-                final InjectTarget target = field.getAnnotation(InjectTarget.class);
-                if (target != null) {
-                    final Object sourceObject = target.policy() == InjectTarget.Policy.BY_TYPE
-                            ? getSourceObject(field, sourcesByType, field.getType())
-                            : getSourceObject(field, sourcesByName, field.getName());
+        for (Class<?> target : targets) {
+            final Object instance = getOrCreateSharedObject(target);
+            for (Field field : target.getDeclaredFields()) {
+                final InjectTarget annotation = field.getAnnotation(InjectTarget.class);
+                if (annotation != null) {
+                    final LinkedList<Class<?>> dependencies;
+                    if (sources.contains(field.getType(), field.getName())) {
+                        // 1st priority
+                        // Search for sources matching both type and name.
+                        dependencies = sources.get(field.getType(), field.getName());
+                    } else {
+                        // 2nd priority
+                        // Search for sources matching the corresponding key specified by policy.
+                        dependencies = new LinkedList<>();
+                        (annotation.policy() == InjectTarget.Policy.BY_TYPE
+                                ? sources.row(field.getType())
+                                : sources.column(field.getName())).values().forEach(dependencies::addAll);
+                    }
+                    if (dependencies.size() < 1)
+                        throw new IOCFrameworkException("No matching source of " + field.toGenericString());
+                    if (dependencies.size() > 1)
+                        throw new IOCFrameworkException("Too many matching source of " + field.toGenericString());
                     try {
                         field.setAccessible(true);
-                        field.set(instance, sourceObject);
+                        field.set(instance, getOrCreateSharedObject(dependencies.getFirst()));
                     } catch (IllegalAccessException e) {
-                        throw new IOCFrameworkException("Cannot inject into " + field.getName());
+                        throw new IOCFrameworkException("Cannot inject into " + field.toGenericString());
                     }
                 }
             }
         }
     }
 
-    /**
-     * Scan all classes under a specific package and register them all.
-     *
-     * @param pkg Package URL.
-     */
     public void scan(String pkg) throws IOCFrameworkException {
         final HashSet<Class<?>> classes = new HashSet<>();
-        classes.addAll(new ScannerOfDir().scan(pkg));
-        classes.addAll(new ScannerOfJar().scan(pkg));
+        classes.addAll(new DirScanner().scan(pkg));
+        classes.addAll(new JarScanner().scan(pkg));
         for (Class<?> aClass : classes)
             register(aClass);
     }
 
-    private Object createInstance(Class<?> type) throws IOCFrameworkException {
-        try {
-            return type.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
-            throw new IOCFrameworkException("Cannot create instance of " + type.getName());
-        }
+    private void registerSource(Class<?> type, String name, Class<?> source) {
+        if (!sources.contains(type, name))
+            sources.put(type, name, new LinkedList<>(Collections.singletonList(source)));
+        else
+            sources.get(type, name).addLast(source);
     }
 
-    private <K> Object getSourceObject(Field field, HashMap<K, LinkedList<Object>> map, K key) throws IOCFrameworkException {
-        if (!map.containsKey(key))
-            throw new IOCFrameworkException(field.toGenericString() + ": No sources found");
-        final LinkedList<Object> list = map.get(key);
-        if (list.size() > 1)
-            throw new IOCFrameworkException(field.toGenericString() + ": Cannot decide which to inject.");
-        return list.getFirst();
-    }
 }

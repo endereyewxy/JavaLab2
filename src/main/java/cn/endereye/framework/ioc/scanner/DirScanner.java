@@ -6,14 +6,14 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.Objects;
 
-public class ScannerOfDir implements Scanner {
+public class DirScanner implements Scanner {
     private final String basePath;
 
-    public ScannerOfDir() {
-        this(ScannerOfDir.class.getResource("/").getPath());
+    public DirScanner() {
+        this(DirScanner.class.getResource("/").getPath());
     }
 
-    public ScannerOfDir(String basePath) {
+    public DirScanner(String basePath) {
         this.basePath = basePath;
     }
 

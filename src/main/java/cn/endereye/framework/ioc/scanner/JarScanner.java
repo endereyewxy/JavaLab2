@@ -9,7 +9,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.jar.JarEntry;
 
-public class ScannerOfJar implements Scanner {
+public class JarScanner implements Scanner {
     @Override
     public HashSet<Class<?>> scan(String pkg) throws IOCFrameworkException {
         HashSet<Class<?>> result = new HashSet<>();
@@ -40,7 +40,7 @@ public class ScannerOfJar implements Scanner {
                     }
                 }
             } else if ("file".equalsIgnoreCase(url.getProtocol())) {
-                result.addAll(new ScannerOfDir(url.getPath().replace(pkg.replace(".", "/"), "")).scan(pkg));
+                result.addAll(new DirScanner(url.getPath().replace(pkg.replace(".", "/"), "")).scan(pkg));
             }
         }
         return result;
