@@ -2,16 +2,18 @@ package cn.endereye.framework.ioc;
 
 import cn.endereye.framework.ioc.annotations.InjectSource;
 import cn.endereye.framework.ioc.annotations.InjectTarget;
+import cn.endereye.framework.ioc.scanner.ScannerOfDir;
+import cn.endereye.framework.ioc.scanner.ScannerOfJar;
 import cn.endereye.framework.utils.AnnotationUtils;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 
-@SuppressWarnings("rawtypes")
 public class Manager {
-    private final HashMap<Class, LinkedList<Object>> sourcesByType = new HashMap<>();
+    private final HashMap<Class<?>, LinkedList<Object>> sourcesByType = new HashMap<>();
 
     private final HashMap<String, LinkedList<Object>> sourcesByName = new HashMap<>();
 
@@ -24,16 +26,11 @@ public class Manager {
      * @throws IOCFrameworkException Occurred when failed to create an instance of the class.
      */
     public void register(Class<?> type) throws IOCFrameworkException {
-        final Object instance;
-        try {
-            instance = type.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
-            throw new IOCFrameworkException("Cannot create instance of " + type.getName());
-        }
-        // Register as an injection source.
+        Object instance = null;
         if (type.getAnnotation(Deprecated.class) == null) {
             final InjectSource source = AnnotationUtils.findAnnotation(InjectSource.class, type);
             if (source != null) {
+                instance = createInstance(type);
                 // Step 1. Add registry of its name.
                 //         This step is skipped if the source does not have a explicitly assigned name.
                 if (!"".equals(source.name())) {
@@ -45,18 +42,19 @@ public class Manager {
                 sourcesByType.putIfAbsent(type, new LinkedList<>());
                 sourcesByType.get(type).addLast(instance);
                 // Step 3. Add registries for implemented interfaces.
-                for (Class inf : type.getInterfaces()) {
+                for (Class<?> inf : type.getInterfaces()) {
                     sourcesByType.putIfAbsent(inf, new LinkedList<>());
                     sourcesByType.get(inf).addLast(instance);
                 }
             }
         }
-        // Register as an injection target.
         for (Field field : type.getDeclaredFields()) {
             final InjectTarget target = field.getAnnotation(InjectTarget.class);
             if (target != null) {
                 // Add this object into the target list.
                 // Actual injection is performed later, in order to ensure every injection source is registered.
+                if (instance == null)
+                    instance = createInstance(type);
                 targets.add(instance);
                 break;
             }
@@ -93,12 +91,23 @@ public class Manager {
      *
      * @param pkg Package URL.
      */
-    public void scan(String pkg) {
-        // TODO To be implemented.
+    public void scan(String pkg) throws IOCFrameworkException {
+        final HashSet<Class<?>> classes = new HashSet<>();
+        classes.addAll(new ScannerOfDir().scan(pkg));
+        classes.addAll(new ScannerOfJar().scan(pkg));
+        for (Class<?> aClass : classes)
+            register(aClass);
     }
 
-    private <K> Object getSourceObject(Field field, HashMap<K, LinkedList<Object>> map, K key)
-            throws IOCFrameworkException {
+    private Object createInstance(Class<?> type) throws IOCFrameworkException {
+        try {
+            return type.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new IOCFrameworkException("Cannot create instance of " + type.getName());
+        }
+    }
+
+    private <K> Object getSourceObject(Field field, HashMap<K, LinkedList<Object>> map, K key) throws IOCFrameworkException {
         if (!map.containsKey(key))
             throw new IOCFrameworkException(field.toGenericString() + ": No sources found");
         final LinkedList<Object> list = map.get(key);

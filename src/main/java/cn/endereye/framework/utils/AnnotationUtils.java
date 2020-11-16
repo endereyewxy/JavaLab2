@@ -22,9 +22,7 @@ public class AnnotationUtils {
     }
 
     @SuppressWarnings("unchecked")
-    private static <A extends Annotation> A findAnnotation(Class<A> annClass,
-                                                           Class<?> srcClass,
-                                                           HashSet<Annotation> visited) {
+    private static <A extends Annotation> A findAnnotation(Class<A> annClass, Class<?> srcClass, HashSet<Annotation> visited) {
         final Annotation[] annotations = srcClass.getDeclaredAnnotations();
         for (Annotation ann : annotations) {
             if (ann.annotationType() == annClass)
