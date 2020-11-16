@@ -2,11 +2,11 @@ package cn.endereye.framework.ioc;
 
 import cn.endereye.framework.ioc.annotations.InjectSource;
 import cn.endereye.framework.ioc.annotations.InjectTarget;
-import cn.endereye.framework.ioc.scanner.DirScanner;
-import cn.endereye.framework.ioc.scanner.JarScanner;
 import cn.endereye.framework.utils.AnnotationUtils;
+import cn.endereye.framework.utils.scanner.Scanner;
 import com.google.common.collect.HashBasedTable;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 
@@ -76,11 +76,11 @@ public class Manager {
     }
 
     public void scan(String pkg) throws IOCFrameworkException {
-        final HashSet<Class<?>> classes = new HashSet<>();
-        classes.addAll(new DirScanner().scan(pkg));
-        classes.addAll(new JarScanner().scan(pkg));
-        for (Class<?> aClass : classes)
-            register(aClass);
+        try {
+            Scanner.scan(pkg, this::register);
+        } catch (ClassNotFoundException | IOException e) {
+            throw new IOCFrameworkException("Failed when scanning classes");
+        }
     }
 
     private void registerSource(Class<?> type, String name, Class<?> source) {
