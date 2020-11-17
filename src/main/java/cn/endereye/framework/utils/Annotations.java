@@ -6,8 +6,7 @@ import java.util.HashSet;
 /**
  * Provide utilities for accessing annotations. Inspired by the same class from Spring Framework.
  */
-public class AnnotationUtils {
-
+public abstract class Annotations {
     /**
      * Find a certain annotation from some class, including annotations decorating the class directly, and those who
      * decorate annotations decorating this class, and so on.

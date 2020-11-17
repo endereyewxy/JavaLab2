@@ -2,23 +2,34 @@ package cn.endereye.framework.ioc;
 
 import cn.endereye.framework.ioc.annotations.InjectSource;
 import cn.endereye.framework.ioc.annotations.InjectTarget;
-import cn.endereye.framework.utils.AnnotationUtils;
+import cn.endereye.framework.utils.Annotations;
 import cn.endereye.framework.utils.scanner.Scanner;
 import com.google.common.collect.HashBasedTable;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 
-public class Manager {
+public class IOCManager {
+    private static IOCManager instance = null;
+
     private final HashMap<Class<?>, Object> sharedObjects = new HashMap<>();
 
     private final HashBasedTable<Class<?>, String, LinkedList<Class<?>>> sources = HashBasedTable.create();
 
     private final ArrayList<Class<?>> targets = new ArrayList<>();
 
+    public static IOCManager getInstance() {
+        if (instance == null) {
+            synchronized (IOCManager.class) {
+                if (instance == null)
+                    instance = new IOCManager();
+            }
+        }
+        return instance;
+    }
+
     @SuppressWarnings("unchecked")
-    public <T> T getOrCreateSharedObject(Class<T> type) throws IOCFrameworkException {
+    public <T> T getSingleton(Class<T> type) throws IOCFrameworkException {
         try {
             if (!sharedObjects.containsKey(type))
                 sharedObjects.put(type, type.newInstance());
@@ -30,7 +41,7 @@ public class Manager {
 
     public void register(Class<?> type) {
         if (type.getAnnotation(Deprecated.class) == null) {
-            final InjectSource annotation = AnnotationUtils.findAnnotation(InjectSource.class, type);
+            final InjectSource annotation = Annotations.findAnnotation(InjectSource.class, type);
             if (annotation != null) {
                 registerSource(type, annotation.name(), type);
                 for (Class<?> inf : type.getInterfaces())
@@ -43,7 +54,7 @@ public class Manager {
 
     public void inject() throws IOCFrameworkException {
         for (Class<?> target : targets) {
-            final Object instance = getOrCreateSharedObject(target);
+            final Object instance = getSingleton(target);
             for (Field field : target.getDeclaredFields()) {
                 final InjectTarget annotation = field.getAnnotation(InjectTarget.class);
                 if (annotation != null) {
@@ -66,7 +77,7 @@ public class Manager {
                         throw new IOCFrameworkException("Too many matching source of " + field.toGenericString());
                     try {
                         field.setAccessible(true);
-                        field.set(instance, getOrCreateSharedObject(dependencies.getFirst()));
+                        field.set(instance, getSingleton(dependencies.getFirst()));
                     } catch (IllegalAccessException e) {
                         throw new IOCFrameworkException("Cannot inject into " + field.toGenericString());
                     }
@@ -78,9 +89,12 @@ public class Manager {
     public void scan(String pkg) throws IOCFrameworkException {
         try {
             Scanner.scan(pkg, this::register);
-        } catch (ClassNotFoundException | IOException e) {
+        } catch (Exception e) {
             throw new IOCFrameworkException("Failed when scanning classes");
         }
+    }
+
+    private IOCManager() {
     }
 
     private void registerSource(Class<?> type, String name, Class<?> source) {

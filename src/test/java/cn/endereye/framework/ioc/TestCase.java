@@ -31,7 +31,7 @@ public class TestCase {
 
     @Test
     public void testBasic() {
-        final Manager manager = new Manager();
+        final IOCManager manager = IOCManager.getInstance();
         Assertions.assertDoesNotThrow(() -> {
             manager.register(Instance.class);
             manager.scan("cn.endereye.framework.ioc.test");
