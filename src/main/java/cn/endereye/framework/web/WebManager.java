@@ -6,7 +6,7 @@ import cn.endereye.framework.scanner.Scanner;
 import cn.endereye.framework.web.annotations.RequestController;
 import cn.endereye.framework.web.annotations.RequestEndpoint;
 import cn.endereye.framework.web.annotations.RequestParam;
-import javafx.util.Pair;
+import util.Pair;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

@@ -3,7 +3,7 @@ package cn.endereye.framework.ioc;
 import cn.endereye.framework.ioc.annotations.InjectSource;
 import cn.endereye.framework.ioc.annotations.InjectTarget;
 import cn.endereye.framework.scanner.Scanner;
-import javafx.util.Pair;
+import util.Pair;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
