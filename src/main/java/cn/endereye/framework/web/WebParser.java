@@ -1,7 +1,5 @@
 package cn.endereye.framework.web;
 
-import com.sun.istack.internal.NotNull;
-
 import java.util.HashMap;
 
 public interface WebParser {
@@ -30,7 +28,7 @@ public interface WebParser {
         put(Character.class, characterParser);
     }};
 
-    Object parse(@NotNull String value);
+    Object parse(String value);
 
     @SuppressWarnings("unchecked")
     static <T> T parse(Class<T> type, String value) {
