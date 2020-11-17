@@ -3,8 +3,8 @@ package cn.endereye.framework.web.annotations;
 import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.ANNOTATION_TYPE, ElementType.TYPE})
+@Target(ElementType.PARAMETER)
 @Documented
-public @interface RequestController {
-    String value() default "/";
+public @interface RequestParam {
+    String value();
 }

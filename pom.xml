@@ -27,11 +27,12 @@
             <version>5.7.0</version>
             <scope>test</scope>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+        <!-- https://mvnrepository.com/artifact/org.mockito/mockito-all -->
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>30.0-jre</version>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.10.19</version>
+            <scope>test</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
         <dependency>

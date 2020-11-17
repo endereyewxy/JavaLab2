@@ -1,4 +1,4 @@
-package cn.endereye.framework.utils.scanner;
+package cn.endereye.framework.scanner;
 
 import java.io.IOException;
 import java.util.HashSet;

@@ -6,7 +6,7 @@ import java.lang.annotation.*;
 @Target(ElementType.METHOD)
 @Documented
 public @interface RequestEndpoint {
-    String path() default "";
+    String value() default "";
 
     String method() default "GET";
 }
