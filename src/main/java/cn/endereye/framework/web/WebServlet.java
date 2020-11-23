@@ -6,7 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@javax.servlet.annotation.WebServlet
+@javax.servlet.annotation.WebServlet(urlPatterns = "/")
 public class WebServlet extends HttpServlet {
     private final WebManager manager = WebManager.getInstance();
 
