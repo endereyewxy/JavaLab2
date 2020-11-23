@@ -14,7 +14,10 @@ public interface WebResponse {
     }
 
     static WebResponse raw(String raw) {
-        return (req, resp) -> resp.getWriter().write(raw);
+        return (req, resp) -> {
+            resp.getWriter().write(raw);
+            resp.getWriter().close();
+        };
     }
 
     static WebResponse jsp(Map<String, Object> attributes, String jsp) {
