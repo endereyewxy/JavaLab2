@@ -17,6 +17,8 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 public class WebManager {
     private static WebManager instance = null;
@@ -37,9 +39,9 @@ public class WebManager {
 
     public void register(Class<?> controller) throws WebFrameworkException {
         final RequestController annotation = controller.getAnnotation(RequestController.class);
-        if (annotation != null                                        // must hav @RequestController
-                && controller.getAnnotation(Deprecated.class) == null // must not have @Depreciated
-                && controllers.add(controller)) {                     // must not be already registered
+        if (annotation != null                                     // must have @RequestController
+            && controller.getAnnotation(Deprecated.class) == null // must not have @Depreciated
+            && controllers.add(controller)) {                     // must not be already registered
             for (Method method : controller.getDeclaredMethods()) {
                 final RequestEndpoint endpoint = method.getAnnotation(RequestEndpoint.class);
                 if (endpoint != null) {
@@ -49,12 +51,12 @@ public class WebManager {
                         throw new WebFrameworkException("Endpoint must return a response: " + method.toGenericString());
                     final Pair<String, String> key = new Pair<>(
                             annotation.value() + endpoint.value(), // request path
-                            endpoint.method().toUpperCase());    // request method
+                            endpoint.method().toUpperCase());      // request method
                     if (endpoints.containsKey(key)) {
                         final String errMsg = String.format("Endpoint for %s is conflict: %s and %s",
-                                key.getKey() + ":" + key.getValue(),
-                                endpoints.get(key).toGenericString(),
-                                method.toGenericString());
+                                                            key.getKey() + ":" + key.getValue(),
+                                                            endpoints.get(key).toGenericString(),
+                                                            method.toGenericString());
                         throw new WebFrameworkException(errMsg);
                     }
                     endpoints.put(key, method);
@@ -64,10 +66,11 @@ public class WebManager {
     }
 
     public WebResponse dispatch(String url, HttpServletRequest req, HttpServletResponse resp) throws WebFrameworkException {
-        final Pair<String, String> key = new Pair<>(url, req.getMethod());
-        if (endpoints.containsKey(key)) {
-            final Method endpoint = endpoints.get(key);
-            final ArrayList<Object> args = new ArrayList<>(endpoint.getParameterCount());
+        for (Map.Entry<Pair<String, String>, Method> entry : endpoints.entrySet()) {
+            if (!Pattern.matches(entry.getKey().getKey(), url) || !entry.getKey().getValue().equals(req.getMethod()))
+                continue;
+            final Method            endpoint = entry.getValue();
+            final ArrayList<Object> args     = new ArrayList<>(endpoint.getParameterCount());
             for (Parameter param : endpoint.getParameters()) {
                 Object arg = null;
                 if (param.getType().isAssignableFrom(HttpServletRequest.class))
@@ -87,10 +90,9 @@ public class WebManager {
             } catch (IOCFrameworkException | IllegalAccessException | InvocationTargetException e) {
                 throw new WebFrameworkException(e);
             }
-        } else {
-            // Cannot find a matched URL.
-            return WebResponse.error(HttpServletResponse.SC_NOT_FOUND);
         }
+        // Cannot find a matched URL.
+        return WebResponse.error(HttpServletResponse.SC_NOT_FOUND);
     }
 
     public void scan(String pkg) throws WebFrameworkException {
