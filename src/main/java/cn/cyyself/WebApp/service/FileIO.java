@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-public class ListFiles {
+public class FileIO {
     private static final String root_path = new File(System.getProperty("javalab2.root_path")).getAbsolutePath();
     public static File[] listFile(String path) throws IOException {
         File dir = new File(root_path,path);
@@ -34,5 +34,12 @@ public class ListFiles {
                 return readdata.readAllBytes();
         }
         else return null;
+    }
+    public static boolean mkdir(String path,String dir) throws IOException {
+        if (dir.contains("/") || dir.contains("\\")) return false;
+        else {
+            File file = new File(root_path+path,dir);
+            return file.mkdir();
+        }
     }
 }

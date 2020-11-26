@@ -10,6 +10,7 @@ import util.Pair;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -65,7 +66,7 @@ public class WebManager {
         }
     }
 
-    public WebResponse dispatch(String url, HttpServletRequest req, HttpServletResponse resp) throws WebFrameworkException {
+    public WebResponse dispatch(String url, HttpServletRequest req, HttpServletResponse resp) throws WebFrameworkException, UnsupportedEncodingException {
         for (Map.Entry<Pair<String, String>, Method> entry : endpoints.entrySet()) {
             if (!Pattern.matches(entry.getKey().getKey(), url) || !entry.getKey().getValue().equals(req.getMethod()))
                 continue;
@@ -79,8 +80,10 @@ public class WebManager {
                     arg = resp;
                 if (arg == null) {
                     final RequestParam annotation = param.getAnnotation(RequestParam.class);
-                    if (annotation != null)
+                    if (annotation != null) {
+                        req.setCharacterEncoding("UTF-8");//解决中文乱码问题
                         arg = WebParser.parse(param.getType(), req.getParameter(annotation.value()));
+                    }
                 }
                 args.add(arg);
             }

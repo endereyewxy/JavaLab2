@@ -1,4 +1,4 @@
-<%@ page import="cn.cyyself.WebApp.service.ListFiles" %>
+<%@ page import="cn.cyyself.WebApp.service.FileIO" %>
 <%@ page import="util.Pair" %>
 <%@ page import="java.io.File" %>
 <%@ page import="java.net.URLEncoder" %>
@@ -6,7 +6,7 @@
 <%@ page import="org.apache.commons.text.StringEscapeUtils" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
-    String path = ListFiles.getPath((String) request.getAttribute("path"));
+    String path = FileIO.getPath((String) request.getAttribute("path"));
 %>
 <html>
 <head>
@@ -72,7 +72,7 @@
                         }
                     %>
                     <%
-                        for (File x : ListFiles.listFile(path)) {
+                        for (File x : FileIO.listFile(path)) {
                             String type = x.isDirectory()?"folder":"file";
                     %>
                     <li class="item <%=type%>">
@@ -90,9 +90,23 @@
         </div>
     </div>
 <script>
-    var formData = new FormData();
-    $("#upload").click(function () {
-        alert("test");
+    $("#new_folder").click(function () {
+        var dir_name = prompt("请输入文件夹名：");
+        $.ajax({
+            type: "POST",
+            url: ".",
+            data: {
+                'action': "mkdir",
+                'dir_name': dir_name
+            },
+            success : function(result) {
+                alert("创建成功");
+            },
+            dataType: 'json',
+            error : function(e){
+                alert("网络异常");
+            }
+        });
     });
 </script>
 </body>
