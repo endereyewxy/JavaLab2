@@ -14,9 +14,17 @@ public interface WebResponse {
         return (req, resp) -> resp.sendError(errCode);
     }
 
-    static WebResponse raw(String raw) {
+    static WebResponse raw(byte[] raw) {
         return (req, resp) -> {
-            resp.getWriter().write(raw);
+            resp.getOutputStream().write(raw);
+            resp.getOutputStream().close();
+        };
+    }
+
+    static WebResponse string(String s) {
+        return (req, resp) -> {
+            resp.setHeader("Content-Type","application/octet-stream");
+            resp.getWriter().write(s);
             resp.getWriter().close();
         };
     }

@@ -14,7 +14,7 @@ public class A {
 
     @RequestEndpoint("/a")
     public WebResponse doAGet(@RequestParam("something") String something) {
-        return WebResponse.raw(sa.getMessageA() + ": " + something);
+        return WebResponse.string(sa.getMessageA() + ": " + something);
     }
 
     @RequestEndpoint(value = "/a", method = "POST")
