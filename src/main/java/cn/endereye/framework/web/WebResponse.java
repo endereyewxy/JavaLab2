@@ -16,6 +16,7 @@ public interface WebResponse {
 
     static WebResponse raw(byte[] raw) {
         return (req, resp) -> {
+            resp.setHeader("Content-Type","application/octet-stream");
             resp.getOutputStream().write(raw);
             resp.getOutputStream().close();
         };
@@ -23,7 +24,6 @@ public interface WebResponse {
 
     static WebResponse string(String s) {
         return (req, resp) -> {
-            resp.setHeader("Content-Type","application/octet-stream");
             resp.getWriter().write(s);
             resp.getWriter().close();
         };
