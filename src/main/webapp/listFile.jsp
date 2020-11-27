@@ -92,21 +92,29 @@
 <script>
     $("#new_folder").click(function () {
         var dir_name = prompt("请输入文件夹名：");
-        $.ajax({
-            type: "POST",
-            url: ".",
-            data: {
-                'action': "mkdir",
-                'dir_name': dir_name
-            },
-            success : function(result) {
-                alert("创建成功");
-            },
-            dataType: 'json',
-            error : function(e){
-                alert("网络异常");
-            }
-        });
+        if (dir_name) {
+            $.ajax({
+                type: "POST",
+                url: ".",
+                data: {
+                    'action': "mkdir",
+                    'dir_name': dir_name
+                },
+                success: function (result) {
+                    if (result.status == 200) {
+                        alert("创建成功");
+                        window.location.reload();
+                    }
+                    else {
+                        alert(result.msg);
+                    }
+                },
+                dataType: 'json',
+                error: function (e) {
+                    alert("网络异常");
+                }
+            });
+        }
     });
 </script>
 </body>

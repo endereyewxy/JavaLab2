@@ -37,17 +37,12 @@ public class Files {
         if (path.equals(new_path)) {
             switch (action) {
                 case "mkdir":
-                    //TODO: fix Response only leaves "OK" but not whole json
-                    if (FileIO.mkdir(path,dir_name)) WebResponse.string("{\"status\":200,\"msg\":\"ok\"");
-                    else WebResponse.string("{\"status\":500,\"msg\":\"Server Error\"");
-                    break;
-                case "upload":
-                    break;
+                    if (FileIO.mkdir(path,dir_name)) return WebResponse.string("{\"status\":200,\"msg\":\"ok\"}");
+                    else return WebResponse.string("{\"status\":500,\"msg\":\"Server Error\"}");
                 default:
-                    return WebResponse.string("{\"status\":404,\"msg\":\"unknow action\"");
+                    return WebResponse.string("{\"status\":404,\"msg\":\"unknow action\"}");
             }
-            return WebResponse.string("ok");
         }
-        else return WebResponse.string("{\"status\":403,\"msg\":\"path unavailable\"");
+        else return WebResponse.string("{\"status\":403,\"msg\":\"path unavailable\"}");
     }
 }
