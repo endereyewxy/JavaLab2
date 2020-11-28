@@ -18,12 +18,12 @@ public class B {
     @RequestEndpoint("/integer")
     public WebResponse doInteger(@RequestParam("a") int a,
                                  @RequestParam("b") int b) {
-        return WebResponse.raw(String.valueOf(sbInteger.div(a, b)));
+        return WebResponse.string(String.valueOf(sbInteger.div(a, b)));
     }
 
     @RequestEndpoint("/double")
     public WebResponse doDouble(@RequestParam("a") double a,
                                 @RequestParam("b") double b) {
-        return WebResponse.raw(String.valueOf(sbDouble.div(a, b)));
+        return WebResponse.string(String.valueOf(sbDouble.div(a, b)));
     }
 }
