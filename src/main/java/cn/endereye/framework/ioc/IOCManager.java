@@ -36,6 +36,7 @@ public class IOCManager {
      *
      * @param type Class of the instance.
      * @param <T>  Generic type parameter of the instance.
+     *
      * @throws IOCFrameworkException Occurs when failed to create an instance.
      */
     @SuppressWarnings("unchecked")
@@ -74,10 +75,10 @@ public class IOCManager {
             for (Field field : target.getDeclaredFields()) {
                 final InjectTarget annotation = field.getAnnotation(InjectTarget.class);
                 if (annotation != null) {
-                    final IOCPolicy policy = IOCPolicy.policies.get(annotation.policy());
-                    int maxPrior = -1;
-                    Class<?> source1 = null;
-                    Class<?> source2 = null;
+                    final IOCPolicy policy   = IOCPolicy.policies.get(annotation.policy());
+                    int             maxPrior = -1;
+                    Class<?>        source1  = null;
+                    Class<?>        source2  = null;
                     for (Pair<InjectSource, Class<?>> pair : sources) {
                         int prior = policy.getPriority(pair.getKey(), pair.getValue(), field);
                         if (prior == maxPrior) {
@@ -94,9 +95,9 @@ public class IOCManager {
                     }
                     if (maxPrior != -1 && source2 != null) {
                         final String errMsg = String.format("When injecting %s: Cannot decide between %s and %s",
-                                field.toGenericString(),
-                                source1.toGenericString(),
-                                source2.toGenericString());
+                                                            field.toGenericString(),
+                                                            source1.toGenericString(),
+                                                            source2.toGenericString());
                         throw new IOCFrameworkException(errMsg);
                     }
                     final Object sourceInstance = maxPrior == -1 ? null : getSingleton(source1);

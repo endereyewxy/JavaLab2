@@ -10,8 +10,8 @@ import java.util.jar.JarEntry;
 public class JarScanner implements Scanner {
     @Override
     public HashSet<Class<?>> scan(String pkg) throws ClassNotFoundException, IOException {
-        HashSet<Class<?>> result = new HashSet<>();
-        final Enumeration<URL> urls = Thread.currentThread().getContextClassLoader().getResources(pkg.replace(".", "/"));
+        final HashSet<Class<?>> result = new HashSet<>();
+        final Enumeration<URL>  urls   = Thread.currentThread().getContextClassLoader().getResources(pkg.replace(".", "/"));
         while (urls.hasMoreElements()) {
             final URL url = urls.nextElement();
             if ("jar".equalsIgnoreCase(url.getProtocol())) {
