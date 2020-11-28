@@ -16,7 +16,6 @@
     <script src="/resource/js/jquery.min.js"></script>
 </head>
 <body class="index" id="root">
-    <input type="file" id="fileUpload" hidden />
     <div id="topbar">
         <div id="toolbar">
             <div id="upload" class="tool">
@@ -89,33 +88,76 @@
             </div>
         </div>
     </div>
-<script>
-    $("#new_folder").click(function () {
-        var dir_name = prompt("请输入文件夹名：");
-        if (dir_name) {
+    <script>
+        $("#new_folder").click(function () {
+            var dir_name = prompt("请输入文件夹名：");
+            if (dir_name) {
+                $.ajax({
+                    type: "POST",
+                    url: ".",
+                    data: {
+                        "action": "mkdir",
+                        "dir_name": dir_name
+                    },
+                    success: function (result) {
+                        if (result.status == 200) {
+                            alert("创建成功");
+                            window.location.reload();
+                        }
+                        else {
+                            alert(result.msg);
+                        }
+                    },
+                    dataType: 'json',
+                    error: function (e) {
+                        alert("网络异常");
+                    }
+                });
+            }
+        });
+        var file_input = $('<input type="file" hidden/>');
+        $("#upload").click(function () {
+            file_input.click();
+        });
+        file_input.change(function(e){
+            var file = file_input[0].files[0];
+            var upload_form = new FormData();
+            upload_form.append("action","upload_file");
+            upload_form.append("file",file,file.name);
             $.ajax({
                 type: "POST",
                 url: ".",
-                data: {
-                    'action': "mkdir",
-                    'dir_name': dir_name
-                },
-                success: function (result) {
-                    if (result.status == 200) {
-                        alert("创建成功");
-                        window.location.reload();
+                xhr: function () {
+                    var myXhr = $.ajaxSettings.xhr();
+                    if (myXhr.upload) {
+                        myXhr.upload.addEventListener('progress', function (e) {
+                            var position = e.loaded || e.position;
+                            var total = e.total;
+                            var percent = 0;
+                            if (e.lengthComputable) {
+                                percent = Math.ceil(position / total * 100);
+                            }
+                            console.log(percent);
+                        }, false);
                     }
-                    else {
-                        alert(result.msg);
-                    }
+                    return myXhr;
                 },
-                dataType: 'json',
-                error: function (e) {
-                    alert("网络异常");
-                }
+                success: function (data) {
+                    // your callback here
+                    alert("success");
+                },
+                error: function (error) {
+                    // handle error
+                    alert("error");
+                },
+                async: true,
+                data: upload_form,
+                cache: false,
+                contentType: false,
+                processData: false,
+                timeout: 60000
             });
-        }
-    });
-</script>
+        });
+    </script>
 </body>
 </html>

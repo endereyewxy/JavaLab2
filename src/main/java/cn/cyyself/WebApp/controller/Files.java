@@ -35,10 +35,13 @@ public class Files {
         String path = URLDecoder.decode(req.getRequestURI().substring("/files".length()),"UTF-8");
         String new_path = FileIO.getPath(path);
         if (path.equals(new_path)) {
+            if (action == null) return WebResponse.string("{\"status\":404,\"msg\":\"action is null\"}");
             switch (action) {
                 case "mkdir":
                     if (FileIO.mkdir(path,dir_name)) return WebResponse.string("{\"status\":200,\"msg\":\"ok\"}");
                     else return WebResponse.string("{\"status\":500,\"msg\":\"Server Error\"}");
+                case "upload_file":
+                    return WebResponse.string("{\"status\":404,\"msg\":\"unknow action\"}");
                 default:
                     return WebResponse.string("{\"status\":404,\"msg\":\"unknow action\"}");
             }
