@@ -90,7 +90,7 @@
     </div>
     <script>
         $("#new_folder").click(function () {
-            var dir_name = prompt("请输入文件夹名：");
+            let dir_name = prompt("请输入文件夹名：");
             if (dir_name) {
                 $.ajax({
                     type: "POST",
@@ -110,14 +110,11 @@
                 });
             }
         });
-        var file_input = $('<input type="file" hidden/>');
-        $("#upload").click(function () {
-            file_input.click();
-        });
-        file_input.change(function(e){
-            var file = file_input[0].files[0];
-            var upload_form = new FormData();
-            upload_form.append("file",file,file.name);
+        function upload_files(files) {
+            let upload_form = new FormData();
+            for (let i=0;i < files.length;i++) {
+                upload_form.append(files[i].name, files[i], files[i].name);
+            }
             $.ajax({
                 type: "POST",
                 url: ".",
@@ -125,7 +122,7 @@
                     return $.ajaxSettings.xhr();
                 },
                 success: function (rawdata) {
-                    var data = JSON.parse(rawdata);
+                    let data = JSON.parse(rawdata);
                     if (data.status === 200) window.location.reload();
                     else alert(data.msg);
                 },
@@ -136,7 +133,22 @@
                 contentType: false,
                 processData: false
             });
+        }
+        let file_input = $('<input type="file" hidden />');
+        $("#upload").click(function () {
+            file_input.click();
         });
+        file_input.change(function(e){
+            upload_files(file_input[0].files);
+        });
+        document.ondrop = function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+            upload_files(e.dataTransfer.files);
+        };
+        document.ondragover = function (e) {
+            e.preventDefault();
+        };
     </script>
 </body>
 </html>

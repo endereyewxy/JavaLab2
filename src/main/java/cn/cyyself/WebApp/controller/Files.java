@@ -18,7 +18,7 @@ import java.util.Map;
 @RequestController("/files/")
 public class Files {
     @RequestEndpoint(".*")
-    public WebResponse doAGet(@RequestParam HttpServletRequest req) throws IOException {
+    public WebResponse doAGet(HttpServletRequest req) throws IOException {
         String path = URLDecoder.decode(req.getRequestURI().substring("/files".length()),"UTF-8");
         String new_path = FileIO.getPath(path);
         if (!new_path.equals(path)) return WebResponse.redirect("/files"+ new_path);
@@ -34,11 +34,11 @@ public class Files {
         }
     }
     @RequestEndpoint(value = ".*", method = "POST")
-    public WebResponse doAPost(@RequestParam("action") String action, @RequestParam("dir_name") String dir_name, @RequestParam UploadFiles files, HttpServletRequest req) throws IOException {
+    public WebResponse doAPost(@RequestParam("action") String action, @RequestParam("dir_name") String dir_name, UploadFiles files, HttpServletRequest req) throws IOException {
         String path = URLDecoder.decode(req.getRequestURI().substring("/files".length()),"UTF-8");
         String new_path = FileIO.getPath(path);
         if (path.equals(new_path)) {
-            if (action == null && files != null) {
+            if (action == null && files != null) {//file upload
                 boolean result = true;
                 for (FileItem x : files.FileList) result &= FileIO.upload(path,x);
                 if (result) return WebResponse.string("{\"status\":200,\"msg\":\"Upload Success\"}");
@@ -48,7 +48,7 @@ public class Files {
                 if (FileIO.mkdir(path, dir_name)) return WebResponse.string("{\"status\":200,\"msg\":\"ok\"}");
                 else return WebResponse.string("{\"status\":500,\"msg\":\"Server Error\"}");
             } else {
-                return WebResponse.string("{\"status\":404,\"msg\":\"unknow action\"}");
+                return WebResponse.string("{\"status\":500,\"msg\":\"Unknow action\"}");
             }
         }
         else return WebResponse.string("{\"status\":403,\"msg\":\"path unavailable\"}");

@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 @RequestController("/resource/")
 public class resource {
     @RequestEndpoint(".*")
-    public WebResponse doStatic(@RequestParam HttpServletRequest req) {
+    public WebResponse doStatic(HttpServletRequest req) {
         return WebResponse.file(req.getRequestURI());
     }
 }
