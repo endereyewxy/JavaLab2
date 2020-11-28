@@ -1,5 +1,7 @@
 package cn.cyyself.WebApp.service;
 
+import org.apache.commons.fileupload.FileItem;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -40,6 +42,19 @@ public class FileIO {
         else {
             File file = new File(root_path+path,dir);
             return file.mkdir();
+        }
+    }
+    public static boolean upload(String path, FileItem upload_file) {
+        if (upload_file.getName().contains("/") || upload_file.getName().contains("\\")) return false;
+        else {
+            File file = new File(root_path+path,upload_file.getName());
+            try {
+                upload_file.write(file);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+            return true;
         }
     }
 }

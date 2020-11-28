@@ -100,13 +100,8 @@
                         "dir_name": dir_name
                     },
                     success: function (result) {
-                        if (result.status == 200) {
-                            alert("创建成功");
-                            window.location.reload();
-                        }
-                        else {
-                            alert(result.msg);
-                        }
+                        if (result.status === 200) window.location.reload();
+                        else alert(result.msg);
                     },
                     dataType: 'json',
                     error: function (e) {
@@ -122,40 +117,24 @@
         file_input.change(function(e){
             var file = file_input[0].files[0];
             var upload_form = new FormData();
-            upload_form.append("action","upload_file");
             upload_form.append("file",file,file.name);
             $.ajax({
                 type: "POST",
                 url: ".",
                 xhr: function () {
-                    var myXhr = $.ajaxSettings.xhr();
-                    if (myXhr.upload) {
-                        myXhr.upload.addEventListener('progress', function (e) {
-                            var position = e.loaded || e.position;
-                            var total = e.total;
-                            var percent = 0;
-                            if (e.lengthComputable) {
-                                percent = Math.ceil(position / total * 100);
-                            }
-                            console.log(percent);
-                        }, false);
-                    }
-                    return myXhr;
+                    return $.ajaxSettings.xhr();
                 },
-                success: function (data) {
-                    // your callback here
-                    alert("success");
+                success: function (rawdata) {
+                    var data = JSON.parse(rawdata);
+                    if (data.status === 200) window.location.reload();
+                    else alert(data.msg);
                 },
-                error: function (error) {
-                    // handle error
-                    alert("error");
+                error: function (rawdata) {
+                    alert("网络异常");
                 },
-                async: true,
                 data: upload_form,
-                cache: false,
                 contentType: false,
-                processData: false,
-                timeout: 60000
+                processData: false
             });
         });
     </script>

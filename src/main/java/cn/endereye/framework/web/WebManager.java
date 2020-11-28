@@ -6,6 +6,7 @@ import cn.endereye.framework.scanner.Scanner;
 import cn.endereye.framework.web.annotations.RequestController;
 import cn.endereye.framework.web.annotations.RequestEndpoint;
 import cn.endereye.framework.web.annotations.RequestParam;
+import cn.endereye.framework.web.model.UploadFiles;
 import util.Pair;
 
 import javax.servlet.http.HttpServletRequest;
@@ -15,10 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class WebManager {
@@ -66,7 +64,7 @@ public class WebManager {
         }
     }
 
-    public WebResponse dispatch(String url, HttpServletRequest req, HttpServletResponse resp) throws WebFrameworkException, UnsupportedEncodingException {
+    public WebResponse dispatch(String url, HttpServletRequest req, HttpServletResponse resp, UploadFiles files) throws WebFrameworkException, UnsupportedEncodingException {
         for (Map.Entry<Pair<String, String>, Method> entry : endpoints.entrySet()) {
             if (!Pattern.matches(entry.getKey().getKey(), url) || !entry.getKey().getValue().equals(req.getMethod()))
                 continue;
@@ -78,6 +76,8 @@ public class WebManager {
                     arg = req;
                 if (param.getType().isAssignableFrom(HttpServletResponse.class))
                     arg = resp;
+                if (param.getType().isAssignableFrom(UploadFiles.class))
+                    arg = files;
                 if (arg == null) {
                     final RequestParam annotation = param.getAnnotation(RequestParam.class);
                     if (annotation != null) {
