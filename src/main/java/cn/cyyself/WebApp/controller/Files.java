@@ -28,7 +28,7 @@ public class Files {
         }
         else {
             //is directory
-            Map<String,Object> jsp_params = new HashMap<String,Object>();
+            Map<String,Object> jsp_params = new HashMap<>();
             jsp_params.put("path",path);
             return WebResponse.jsp(jsp_params,"/listFile.jsp");
         }
@@ -39,20 +39,16 @@ public class Files {
         String new_path = FileIO.getPath(path);
         if (path.equals(new_path)) {
             if (action == null && files != null) {
-                Iterator fileIt = files.FileList.iterator();
-                if (fileIt.hasNext()) {
-                    if (FileIO.upload(path, (FileItem) fileIt.next()))
-                        return WebResponse.string("{\"status\":200,\"msg\":\"Upload Success\"}");
-                    else return WebResponse.string("{\"status\":404,\"msg\":\"Upload Failed\"}");
-                }
-                else return WebResponse.string("{\"status\":404,\"msg\":\"no file uploaded\"}");
+                boolean result = true;
+                for (FileItem x : files.FileList) result &= FileIO.upload(path,x);
+                if (result) return WebResponse.string("{\"status\":200,\"msg\":\"Upload Success\"}");
+                else return WebResponse.string("{\"status\":404,\"msg\":\"Upload Failed\"}");
             }
-            else switch (action) {
-                case "mkdir":
-                    if (FileIO.mkdir(path,dir_name)) return WebResponse.string("{\"status\":200,\"msg\":\"ok\"}");
-                    else return WebResponse.string("{\"status\":500,\"msg\":\"Server Error\"}");
-                default:
-                    return WebResponse.string("{\"status\":404,\"msg\":\"unknow action\"}");
+            else if ("mkdir".equals(action)) {
+                if (FileIO.mkdir(path, dir_name)) return WebResponse.string("{\"status\":200,\"msg\":\"ok\"}");
+                else return WebResponse.string("{\"status\":500,\"msg\":\"Server Error\"}");
+            } else {
+                return WebResponse.string("{\"status\":404,\"msg\":\"unknow action\"}");
             }
         }
         else return WebResponse.string("{\"status\":403,\"msg\":\"path unavailable\"}");
