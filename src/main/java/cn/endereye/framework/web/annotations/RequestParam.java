@@ -6,5 +6,5 @@ import java.lang.annotation.*;
 @Target(ElementType.PARAMETER)
 @Documented
 public @interface RequestParam {
-    String value();
+    String value() default "";
 }
