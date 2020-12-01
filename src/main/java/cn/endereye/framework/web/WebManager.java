@@ -28,7 +28,7 @@ public class WebManager {
 
     public static WebManager getInstance() {
         if (instance == null) {
-            synchronized (IOCManager.class) {
+            synchronized (WebManager.class) {
                 if (instance == null)
                     instance = new WebManager();
             }
@@ -38,7 +38,7 @@ public class WebManager {
 
     public void register(Class<?> controller) throws WebFrameworkException {
         final RequestController annotation = controller.getAnnotation(RequestController.class);
-        if (annotation != null                                     // must have @RequestController
+        if (annotation != null                                    // must have @RequestController
             && controller.getAnnotation(Deprecated.class) == null // must not have @Depreciated
             && controllers.add(controller)) {                     // must not be already registered
             for (Method method : controller.getDeclaredMethods()) {

@@ -1,4 +1,4 @@
-package cn.cyyself.WebApp.controller;
+package cn.cyyself.WebApp;
 
 import cn.endereye.framework.Loader;
 
